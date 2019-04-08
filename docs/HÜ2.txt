@@ -1,0 +1,658 @@
+############################
+### Einführung in Statistik  (R Code)
+### (c) Alexandra Posekany
+############################
+### data types 
+# nominal
+(nom_var<-factor(c("ja","nein","nein","ja","ja","k.a.",NA)))
+is.ordered(nom_var)
+# fehlende Werte filtern
+nom_var[!is.na(nom_var)]
+
+# ordinal
+(ord_var<-ordered(c("gut","schlecht","bestens","schlecht","gut","gut"),levels=c("schlecht","gut","bestens")))
+(crazy_order<-ordered(as.character(c(99,100,101,99,100,100,101))))
+
+# interval
+years<-c(1984,1492,2013,1945)
+diff(years)   # Interpretierbar als Jahre zwischen Ereignissen in der Geschichte
+years[1:3]/years[2:4]  # nicht mehr interpretierbar
+# rational
+income<-c(3483,1523,850,1850,10389,6345)  
+diff(income)  
+income[1:5]/income[2:6]  # interpretierbar als 'doppeltes Gehalt', etc.
+
+###############
+### Categorical variables
+###############
+VADeaths
+#pdf("bar_chart.pdf")
+barplot(VADeaths, beside = TRUE,
+        col = c("lightblue", "mistyrose", "lightcyan",
+                "lavender", "cornsilk"))
+        #legend = rownames(VADeaths), ylim = c(0, 100))
+title(main = "Death Rates in Virginia", font.main = 4)
+#dev.off()
+#pdf("dot_chart.pdf")
+
+table(x,y,z)
+HairEyeColor
+ftable(HairEyeColor)
+
+dotchart(VADeaths, main = "Death Rates in Virginia - 1940")
+#dev.off()
+
+pie.sales <- c(0.12, 0.3, 0.26, 0.16, 0.04, 0.12)
+names(pie.sales) <- c("Blueberry", "Cherry",
+                      "Apple", "Boston Cream", "Other", "Vanilla Cream")
+pie(pie.sales)
+
+mosaicplot(~ Sex + Age + Survived, data = Titanic, color = TRUE)
+mosaicplot(Titanic, main = "Survival on the Titanic",color=TRUE)
+
+library(vcd)
+mosaic(HairEyeColor)
+
+mosaic(HairEyeColor, shade=TRUE, legend=TRUE) 
+## Independence model of hair and eye color and sex.  Indicates that
+## there are significantly more blue eyed blond females than expected
+## in the case of independence (and too few brown eyed blond females).
+
+mosaic(HairEyeColor, shade = TRUE, expected = list(c(1,2), 3))
+## Model of joint independence of sex from hair and eye color.  Males
+## are underrepresented among people with brown hair and eyes, and are
+## overrepresented among people with brown hair and blue eyes, but not
+## "significantly".
+
+assoc(HairEyeColor, shade=TRUE) 
+
+data("Arthritis")
+mosaic(Improved ~ Treatment | Sex, data = Arthritis, zero_size = 0)
+mosaic(Improved ~ Treatment | Sex, data = Arthritis, zero_size = 0,
+       highlighting_direction = "right")
+
+assoc(Arthritis[,c("Improved","Treatment","Sex")], shade=TRUE)
+
+
+###########################################
+####################
+### Location and scale estimation
+####################
+## measures of location  
+geo.mean<-function(x){
+  exp(mean(log(x)))
+}
+harmon.mean<-function(x){
+  1/mean(1/x)
+}
+
+midrange<-function(x){
+  (max(x)+min(x))/2
+}
+
+modus<-function(x){
+  h<-hist(x)
+  pos<-which.max(h$count)
+  modus<-mean(h$breaks[pos],h$breaks[pos+1])
+  
+  return(modus)
+}
+
+#########################
+# create test data
+set.seed(1440)
+x<-rnorm(100,mean=1,sd=5)
+y<-runif(100,min=0,max=1)
+z<-rgamma(100,shape=2,rate=5)
+w<-factor(sample(c(rep(1,20),rep(2,10),rep(3,30))))
+
+#####################
+## measure of location
+#####################
+
+## caution: use for unimodal data only!!
+summary(x)
+summary(y)
+summary(z)
+mean(x)  # arithmetic mean
+mean(y)
+mean(z)
+median(x)  # Median
+median(y)
+median(z)
+modus(x)  # Modus
+modus(y)
+modus(z)
+geo.mean(x)  # geometric mean
+geo.mean(y)
+geo.mean(z)
+midrange(x)  # Midrange
+midrange(y)
+midrange(z)
+harmon.mean(x)  # harmonic mean
+harmon.mean(y)
+harmon.mean(z)
+
+location.plot<-function(x){
+  mod<-modus(x)
+  plot(x)
+  abline(h=mean(x),col=1)
+  abline(h=median(x),col=2)
+  abline(h=mod,col=3)
+  abline(h=geo.mean(x),col=4)
+  abline(h=harmon.mean(x),col=5)
+  abline(h=midrange(x),col=6)
+}
+
+location.estimates<-function(x){
+  cat(paste("Mean",mean(x),"\n")) # Mean
+  cat(paste("Median",median(x),"\n")) # Median
+  cat(paste("Mode:", modus(x),"\n"))  # Modus
+  cat(paste("Geometric mean:", geo.mean(x),"\n") ) # geometric mean
+  cat(paste("Midrange:",   midrange(x),"\n")) # Midrange
+  cat(paste("Harmonic mean",  harmon.mean(x),"\n"))  # harmonic mean
+}
+location.estimates(x)
+
+location.plot(x)
+location.plot(y)
+location.plot(z)
+
+# which estimator makes sense for which data?
+#########################
+##  measures of spread/scatter
+#########################
+medmed<-function(x){
+  median(abs(x-median(x)))
+}
+coef.var<-function(x){
+  sd(x)/mean(x)
+}
+####################
+### data application
+var(x)    # Varianz (variance)
+var(y)
+var(z)
+sqrt(var(x))
+sd(x)    # Streuung (standard deviation)
+sd(y)
+sd(z)
+IQR(x)    # Interquartilsabstand (inter-quartile range)
+IQR(y)
+IQR(z)
+medmed(x)   # Median absolute deviance from the median
+medmed(y)
+medmed(z)
+coef.var(x)   # Coefficient of variation
+coef.var(y)
+coef.var(z)
+
+# which measure of deviance makes sense for combining with which measure of location? 
+
+## reconstruct the sample variance 
+x - mean(x)
+(x - mean(x))^2
+sum((x - mean(x))^2)
+(sum((x - mean(x))^2))/(length(x) - 1)    # Varianz
+
+###############
+## skewness and kurtosis
+###############
+library(e1071)
+skewness(x)
+kurtosis(x)
+
+skewness(y)
+kurtosis(y)
+
+skewness(z)
+kurtosis(z)
+
+##################################
+### skewness 
+##################################
+ss <- seq(-1, 1, length.out = 100)
+expr.l <- expression(Skewness < 0)
+left<-"left-tailed"
+sym<-"symmetrical"
+right<- "right-tailed"
+l.skew <- rev(dgamma(ss, 2, 8))
+symm <- dnorm(ss, 0, 0.135)
+r.skew <- dgamma(ss, 2, 8)
+#x11()
+#pdf("skewness.pdf",width=15,height=8)
+par(mfrow=c(1,1))
+plot(ss,l.skew,type='l',lwd=2.5)
+lines(ss,r.skew,col=4,lwd=2.5)
+lines(ss,symm,col=2,lwd=2.5)
+legend(0.75,3,legend=c(left,sym,right),col=c(1,2,4),lwd=2.5)
+#dev.off()
+
+###################################
+### Kurtosis
+###################################
+ss <- seq(-5, 5, length.out = 100)
+expr.l <- expression(Skewness < 0)
+left<-"platy-kurtic"
+sym<-"meso-kurtic"
+right<- "lepto-kurtic"
+platy<-dunif(ss,min=-4,max=4)
+meso<- dnorm(ss, 0, 1)
+lepto<- dt(ss, df=1)
+#x11()
+#pdf("kurtosis.pdf",width=15,height=8)
+par(mfrow=c(1,1))
+plot(ss,meso,type='l',col=2,lwd=2.5)
+lines(ss,platy,col=1,lwd=2.5)
+lines(ss,lepto,col=4,lwd=2.5)
+legend(2,0.4,legend=c(left,sym,right),col=c(1,2,4),lwd=2.5)
+#dev.off()
+
+##################################
+## covariance example
+##################################
+a<-seq(-5,5,by=0.01)
+b<-a^2
+cor(a,b)
+#pdf(file="correlation.pdf",width=18,height=6)
+x11()
+par(mfrow=c(1,3))
+plot(a,b,type='l',main=sprintf("Correlation = %.2e",cor(a,b)),lwd=2.5,cex=1.5*par()$cex.main)
+plot(x,x,type='l',main=sprintf("Correlation = %g",cor(x,x)),lwd=2.5,cex=1.5*par()$cex.main)
+plot(x,-x,type='l',main=sprintf("Correlation = %g",cor(x,-x)),lwd=2.5,cex=1.5*par()$cex.main)
+#dev.off()
+
+cor(x,y)
+par(mfrow=c(1,1))
+plot(y,x)
+abline(a=0,b=cor(y,x))
+
+###############
+## exploratory data analysis
+#############
+norm<-seq(-4,4,by=0.01)
+pdf("norm_density.pdf")
+density<-pnorm(norm)
+plot(norm,density,type='l',lwd=2.5,main="Normal cumulative distribution function")
+dev.off()
+pdf("norm_cdf.pdf")
+cdf<-dnorm(norm)
+plot(norm,cdf,type='l',lwd=2.5,main="Normal density function")
+dev.off()
+
+plot(x)    #scatterplot against index
+summary(x)
+quantile(x,probs=c(0,0.25,0.5,0.75,1))
+barplot(x[1:10],col=4)
+barplot(x[1:10],col=1:10)
+##  ECDF:
+plot(ecdf(x))
+lines(seq(-15,15,by=0.1),pnorm(seq(-15,15,by=0.1),mean=1,sd=5),col=2)
+#########
+## stem and leaf plot of x
+stem(x)
+## histogram
+hist(x)
+hist(x,breaks=20)
+hist(x,breaks=10,freq = FALSE)
+lines(density(x),col=2)
+## boxplot
+boxplot(x,ylim=c(-10,14),horizontal = TRUE)
+##################
+## combine boxplot and histogram
+#pdf("hist_box.pdf")
+nf <- layout(mat = matrix(c(1,2),2,1, byrow=TRUE),  height = c(3,1))
+par(mar=c(2.1, 1.1, 1.1, 2.1))
+hist(x,xlim=c(-10,15),freq = FALSE,ylim=c(0,0.12))
+lines(density(x))
+abline(v=mean(x),col=2)
+abline(v=median(x),col=4)
+boxplot(x, horizontal=TRUE,ylim=c(-10,15))
+#dev.off()
+#pdf("qq_plot.pdf")
+qqnorm(x,cex=2)
+qqline(x,col=2,lwd=3)
+#dev.off()
+#pdf("density.pdf",width=15,height=10)
+hist(x,freq=FALSE,ylim=c(0,0.1))
+lines(density(x),lwd=3)
+lines(density(x,adjust=2),col=2,lwd=3)
+legend(10,0.07,legend=c("standard","double bandwidth"),col=c(1,2),lwd=2)
+#dev.off()
+library(vioplot,width=15,height=8)
+#pdf("vioplot.pdf")
+vioplot(x,col="gold",horizontal=TRUE)
+#dev.off()
+
+par(mar=c(2.1, 2.1, 2.1, 2.1),mfrow=c(1,2))
+plot(ecdf(x))
+qqnorm(x)
+qqline(x,col=2)
+######################################
+## 
+par(mar=c(2.1, 2.1, 2.1, 2.1),mfrow=c(1,1))
+hist(y,breaks=10,freq = FALSE)
+lines(density(y),col=2)
+## boxplot
+boxplot(y,ylim=c(0,1),horizontal = TRUE)
+##################
+## combine boxplot and histogram
+#pdf("hist_box.pdf")
+nf <- layout(mat = matrix(c(1,2),2,1, byrow=TRUE),  height = c(3,1))
+par(mar=c(2.1, 1.1, 1.1, 2.1))
+hist(y,xlim=c(0,1),freq = FALSE,ylim=c(0,1.5))
+lines(density(y))
+abline(v=mean(y),col=2)
+abline(v=median(y),col=4)
+boxplot(y, horizontal=TRUE,ylim=c(0,1))
+
+par(mar=c(2.1, 2.1, 2.1, 2.1),mfrow=c(1,2))
+plot(ecdf(y))
+qqnorm(y)
+qqline(y,col=2)
+############################################
+par(mar=c(2.1, 2.1, 2.1, 2.1),mfrow=c(1,1))
+hist(z,breaks=10,freq = FALSE)
+lines(density(z),col=2)
+## boxplot
+boxplot(z,ylim=c(0,1),horizontal = TRUE)
+##################
+## combine boxplot and histogram
+#pdf("hist_box.pdf")
+nf <- layout(mat = matrix(c(1,2),2,1, byrow=TRUE),  height = c(3,1))
+par(mar=c(2.1, 1.1, 1.1, 2.1))
+hist(z,xlim=c(0,1),freq = FALSE,ylim=c(0,1.75))
+lines(density(z))
+abline(v=mean(z),col=2)
+abline(v=median(z),col=4)
+boxplot(z, horizontal=TRUE,ylim=c(0,1))
+
+par(mar=c(2.1, 2.1, 2.1, 2.1),mfrow=c(1,2))
+plot(ecdf(z))
+qqnorm(z)
+qqline(z,col=2)
+
+##################
+## combine boxplot and histogram
+#pdf("hist_box.pdf")
+nf <- layout(mat = matrix(c(1,2),2,1, byrow=TRUE),  height = c(3,1))
+par(mar=c(2.1, 1.1, 1.1, 2.1))
+hist(w,xlim=c(0,1),freq = FALSE,ylim=c(0,1.5))
+lines(density(w))
+abline(v=mean(w),col=2)
+abline(v=median(w),col=4)
+boxplot(w, horizontal=TRUE,ylim=c(0,1))
+
+par(mar=c(2.1, 2.1, 2.1, 2.1),mfrow=c(1,2))
+plot(ecdf(w))
+qqnorm(w)
+qqline(w,col=2)
+
+########################
+plot(z)    #scatterplot against index
+summary(z)
+quantile(z,probs=c(0,0.25,0.5,0.75,1))
+barplot(z[1:10],col=4)
+##  ECDF:
+plot(ecdf(z))
+lines(seq(0,max(z)+0.05,by=0.01),pgamma((seq(0,max(z)+0.05,by=0.01)),shape=2,rate=5),col=2)
+#########
+## stem and leaf plot of y
+stem(y)
+## histogram
+hist(y)
+## boxplot
+boxplot(y,ylim=c(0,1))
+##################
+## combine boxplot and histogram
+#pdf("hist_box.pdf")
+nf <- layout(mat = matrix(c(1,2),2,1, byrow=TRUE),  height = c(3,1))
+par(mar=c(2.1, 1.1, 1.1, 2.1))
+hist(y,xlim=c(-10,15))
+abline(v=mean(y),col=2)
+abline(v=median(y),col=4)
+boxplot(y, horizontal=TRUE,ylim=c(-10,15))
+#dev.off()
+#pdf("qq_plot.pdf")
+qqnorm(y,cex=2)
+qqline(y,col=2,lwd=3)
+#dev.off()
+#pdf("density.pdf",width=15,height=10)
+hist(y,freq=FALSE,ylim=c(0,0.1))
+lines(density(y),lwd=3)
+lines(density(y,adjust=2),col=2,lwd=3)
+legend(10,0.07,legend=c("standard","double bandwidth"),col=c(1,2),lwd=2)
+#dev.off()
+library(vioplot,width=15,height=8)
+#pdf("vioplot.pdf")
+vioplot(y,col="gold",horizontal=TRUE)
+#dev.off()
+########################
+plot(y)    #scatterplot against index
+summary(y)
+quantile(y,probs=c(0,0.25,0.5,0.75,1))
+barplot(y[1:10],col=4)
+##  ECDF:
+plot(ecdf(z))
+lines(seq(0,1,by=0.1),punif(seq(0,1,by=0.1)),col=2)
+#########
+## stem and leaf plot of z
+stem(z)
+## histogram
+hist(z)
+## boxplot
+boxplot(z,ylim=c(0,1))
+##################
+## combine boxplot and histogram
+nf <- layout(mat = matrix(c(1,2),2,1, byrow=TRUE),  height = c(3,1))
+par(mar=c(2.1, 1.1, 1.1, 2.1))
+hist(z,xlim=c(-10,15))
+abline(v=mean(z),col=2)
+abline(v=median(z),col=4)
+boxplot(z, horizontal=TRUE,ylim=c(-10,15))
+
+qqnorm(z,cex=2)
+qqline(z,col=2,lwd=3)
+
+hist(z,freq=FALSE,ylim=c(0,0.1))
+lines(density(z),lwd=3)
+lines(density(z,adjust=2),col=2,lwd=3)
+legend(10,0.07,legend=c("standard","double bandwidth"),col=c(1,2),lwd=2)
+
+vioplot(z,col="gold",horizontal=TRUE)
+
+boxplot(x,y,z)
+vioplot(x,y,z)
+qqplot(x,y)
+## to visualise with line -> standardise
+qqplot((x-mean(x))/sd(x),(y-mean(y))/sd(y))
+abline(a=0,b=1,col=2,lwd=2)
+
+###############################
+### Time Series
+###############################
+(ldeaths)
+plot.ts(ldeaths)
+cycle(ldeaths)
+tsp(ldeaths)
+season<-numeric(0)
+par(mfrow=c(1,1))
+for(i in 1:frequency(ldeaths)){season[i]<-mean(ldeaths[cycle(ldeaths)==i])}
+season.ts<-ts(rep(season,6),frequency=frequency(ldeaths),start=start(ldeaths))
+#pdf("time_series.pdf",height=6,width=10)
+ts.plot(ldeaths,season.ts,lwd=2,col=c(1,2))
+abline(h=mean(ldeaths),lwd=2,col=3)
+#dev.off()
+#####################################################
+## Visualising correlation
+## put histograms on the diagonal
+panel.hist <- function(x, ...)
+{
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(usr[1:2], 0, 1.5) )
+  h <- hist(x, plot = FALSE)
+  breaks <- h$breaks; nB <- length(breaks)
+  y <- h$counts; y <- y/max(y)
+  rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
+}
+pairs(USJudgeRatings[1:5], panel = panel.smooth,
+      cex = 1.5, pch = 24, bg = "light blue",
+      diag.panel = panel.hist, cex.labels = 2, font.labels = 2)
+
+## put (absolute) correlations on the upper panels,
+## with size proportional to the correlations.
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(0, 1, 0, 1))
+  r <- abs(cor(x, y))
+  txt <- format(c(r, 0.123456789), digits = digits)[1]
+  txt <- paste0(prefix, txt)
+  if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+  text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+
+pairs(USJudgeRatings[,1:6],diag.panel = panel.hist, lower.panel = panel.smooth, upper.panel = panel.cor)
+
+pairs(mtcars,diag.panel = panel.hist, lower.panel = panel.smooth, upper.panel = panel.cor)
+cor(mtcars)
+libary(corrgram)
+corrgram(mtcars, order=TRUE, lower.panel=panel.shade,
+         upper.panel=panel.pie, text.panel=panel.txt,
+         main="Car Milage Data in PC2/PC1 Order") 
+
+corrgram(mtcars, order=TRUE, lower.panel=panel.ellipse,
+         upper.panel=panel.pts, text.panel=panel.txt,
+         diag.panel=panel.minmax,
+         main="Car Mileage Data in PC2/PC1 Order") 
+
+corrgram(mtcars, order=NULL, lower.panel=panel.shade,
+         upper.panel=NULL, text.panel=panel.txt,
+         main="Car Milage Data (unsorted)")
+
+###############################
+#### real data sets
+###############################
+par(mfrow=c(1,1))
+require(utils)
+data()
+data(LakeHuron)
+plot(LakeHuron)
+abline(h=mean(LakeHuron),col=2,lwd=2)
+hist(LakeHuron,freq=FALSE)
+lines(density(LakeHuron),col=2,lwd=2)
+lines(seq(min(LakeHuron),max(LakeHuron),by=0.1),dnorm(seq(min(LakeHuron),max(LakeHuron),by=0.1),mean=mean(LakeHuron),sd=sd(LakeHuron)),col=3,lwd=2)
+boxplot(LakeHuron)
+
+str(LakeHuron)
+summary(LakeHuron)
+modus(LakeHuron)  # Modus
+midrange(LakeHuron)  # Midrange
+location.plot(LakeHuron)
+#########################
+##  measures of spread/scatter
+#########################
+var(LakeHuron)    # Varianz (variance)
+sd(LakeHuron)    # Streuung (standard deviation)
+IQR(LakeHuron)    # Interquartilsabstand (inter-quartile range)
+medmed(LakeHuron)   # Median absolute deviance from the median
+coef.var(LakeHuron)   # Coefficient of variation
+
+skewness(LakeHuron)
+kurtosis(LakeHuron)
+
+### normal distribution
+plot(ecdf(LakeHuron), verticals=TRUE)
+lines(sort(LakeHuron), pnorm(sort(LakeHuron), mean=mean(LakeHuron), sd=sd(LakeHuron)), col=2)
+set.seed(193)
+lak <- sort(rnorm(100, mean=mean(LakeHuron), sd=sd(LakeHuron)))
+plot(ecdf(lak), verticals=TRUE)
+lines(lak, pnorm(lak, mean=mean(LakeHuron), sd=sd(LakeHuron)), col=2)
+par(mfrow=c(1,1))
+qqnorm(LakeHuron)
+qqline(LakeHuron,col=2,lwd=3)
+#########################
+### interesting data sets
+data(attitude)
+summary(attitude)
+plot(attitude$complaints,attitude$rating)
+pairs(attitude)
+location.estimates(attitude[,1])
+location.plot(attitude[,1])
+boxplot(attitude[,1])
+hist(attitude[,1],freq=FALSE)
+lines(density(attitude[,1]))
+qqnorm(attitude[,1])
+qqline(attitude[,1])
+
+data(occupationalStatus)
+summary(occupationalStatus)
+plot(occupationalStatus)
+pairs(occupationalStatus)
+location.estimates(occupationalStatus[,1])
+location.plot(occupationalStatus[,1])
+boxplot(occupationalStatus[,1])
+hist(occupationalStatus[,1],freq=FALSE)
+lines(density(occupationalStatus[,1]))
+qqnorm(occupationalStatus[,1])
+qqline(occupationalStatus[,1]])
+
+states<-data.frame(state.x77,state.division)
+state<-states[,c(1,2,3,5)]
+summary(state)
+plot(state)
+pairs(state)
+location.estimates(state[,1])
+location.plot(state[,1])
+boxplot(state[,1])
+hist(state[,1],freq=FALSE)
+lines(density(state[,1]))
+qqnorm(state[,1])
+qqline(state[,1])
+
+summary(swiss)
+plot(swiss)
+pairs(swiss)
+location.estimates(swiss[,1])
+location.plot(swiss[,1])
+boxplot(swiss[,1])
+hist(swiss[,1],freq=FALSE,ylim=c(0,0.033))
+lines(density(swiss[,1]))
+qqnorm(swiss[,1])
+qqline(swiss[,1])
+var(swiss[,1])    # Varianz (variance)
+sd(swiss[,1])    # Streuung (standard deviation)
+IQR(swiss[,1])    # Interquartilsabstand (inter-quartile range)
+medmed(swiss[,1])   # Median absolute deviance from the median
+coef.var(swiss[,1])   # Coefficient of variation
+
+
+summary(uspop)
+plot(uspop)
+plot(log(uspop))
+pairs(uspop)
+location.estimates(uspop[,1])
+location.plot(uspop[,1])
+boxplot(uspop[,1])
+hist(uspop[,1],freq=FALSE,ylim=c(0,0.033))
+lines(density(uspop[,1]))
+qqnorm(uspop[,1])
+qqline(uspop[,1])
+
+Titanic
+str(Titanic)
+summary(Titanic) # chi-squared test for independence
+mosaicplot(Titanic, main = "Survival on the Titanic",color=TRUE)
+mosaicplot(~ Sex + Age + Class, data = Titanic, color = TRUE) # distribution of people on Titanic
+mosaicplot(~ Sex + Age + Survived, data = Titanic, color = TRUE)
+mosaicplot(~ Sex + Class + Survived, data = Titanic, color = TRUE)
+mosaicplot(~ Age + Class + Survived, data = Titanic, color = TRUE) # simpson's paradox for Chldren in 3rd class
+mosaicplot(~ Age + Survived, data = Titanic, color = TRUE)
+mosaicplot(~ Sex + Survived, data = Titanic, color = TRUE)
+mosaicplot(~ Class + Survived, data = Titanic, color = TRUE)
+
+#########################
+## searches
+help.search("test",package="stats")
+help.search("plot",package=c("base","stats","graphics"))
+help.search("distribution",package=c("base","stats"))

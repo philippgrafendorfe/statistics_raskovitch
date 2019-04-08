@@ -1,0 +1,84 @@
+---
+title: "Titanic"
+output: html_notebook
+---
+
+```{r}
+library(knitr)
+library(tidyverse)
+library(titanic)
+```
+
+Man könnte hier zuerst die Wahrscheinlichkeit eines Mannes zu überleben berechnen; danach berechnen wir ob es einen siginifkanten Unterschied des relativen Anteils der Männer im Vergleich zu dem der Frauen gibt. Anschließen schauen wir uns die Kinder an. 
+
+```{r}
+df <- titanic::titanic_train %>% select(Survived, Sex, Age)
+```
+
+Haben Frauen eine signifikant höhere Überlebenschance als Männer?
+
+```{r}
+prop.table(table(df_filtered$Survived, df_filtered$Sex))
+```
+
+Es sieht so aus als ob mindestens doppelt so viele Frauen überlebt haben wie Männer. 
+Nullhypothese: Die Wahrscheinlichkeit als Frau zu überleben ist gleich groß wie die als Mann zu überleben.
+H0: p=0.12
+H1: p>0.12
+
+
+Wieviel Männer haben überlebt?
+```{r}
+df %>% filter(Sex == 'male') %>% summarise(n=n()) %>% as.numeric() -> nb_male
+df %>% filter(Sex == 'male' & Survived == '1') %>% summarise(n=n()) %>% as.numeric() -> nb_male_survived
+```
+
+```{r}
+df %>% filter(Sex == 'female') %>% summarise(n=n()) %>% as.numeric() -> nb_female
+df %>% filter(Sex == 'female' & Survived == '1') %>% summarise(n=n()) %>% as.numeric() -> nb_female_survived
+```
+
+
+```{r}
+prop.test(x = c(nb_female_survived, nb_male_survived), n=c(nb_female, nb_male), alternative = 'greater')
+```
+
+Für Kinder geht das analog. Man muss sich nur überlegen was es heißt ein Kind zu sein. Spricht bei welchem Alter man tn threshold einzieht.
+
+# Genontologieanalyse
+
+```{r}
+n <- 696
+nb_krebs <- 413
+```
+
+Hier ist Frage nicht ganz korrekt gestellt. Es wird so interpretiert, dass wir zuerst einen Punktschätzer der Proportion ermitteln um dananch das Konfidenzintervall it einer gewissen statistischen Sicherheit anzugeben.
+
+```{r}
+p_hat <- nb_krebs/n
+```
+
+```{r}
+# Set CI alpha level (1-alpha/2)*100%
+alpha = 0.05
+
+# Calculate the critical z-score
+z = qnorm(1-alpha/2)
+
+# Compute the CI
+(conf_upper <- p_hat + z*sqrt(p_hat*(1-p_hat)/n))
+(conf_lower <- p_hat - z*sqrt(p_hat*(1-p_hat)/n))
+```
+
+für das 99% Intervall muss man nur den alpha Wert anpassen.
+
+```{r}
+prop.test(x = nb_krebs, n=n, p=0.55, alternative = 'two.sided')
+```
+
+Die Änderung ist signifkant auf dem 5% Niveau, jedoch nicht auf dem 1% Niveau. da in der Medizint jedoch meist ein 1% Niveau gefordert wird, könne wir hier H0 (p=0.55) nicht ablehne.
+
+
+
+
+

@@ -1,0 +1,124 @@
+############################
+### Einführung in Statistik  (R Code)
+### (c) Alexandra Posekany
+############################
+# estimation and tests
+# two faces of the medal
+#####################
+help.search("test",package="stats")
+########################################
+### proportions test
+binom.test(c(1051, 450), p = 0.5)
+prop.test(1051, 1501, p = 0.5)
+airbag<-c(41,52)
+total<-c(11541,9853)
+prop.test(airbag,total,alternative="less")
+
+##################
+## t test
+set.seed(1234)
+boat<-rnorm(40,mean=172.55,sd=26.33)
+## first check for normality
+hist(boat)
+qqnorm(boat)
+qqline(boat)
+shapiro.test(boat)
+## then perform t test
+t.test(boat,mu=166.3,alternative="greater")
+set.seed(123456)
+boat<-rnorm(40,mean=172.55,sd=26.33)
+hist(boat)
+qqnorm(boat)
+qqline(boat)
+shapiro.test(boat)
+t.test(boat,mu=166.3,alternative="greater")
+
+## paired t test 
+set.seed(4512)
+### product sales in 50 super markets
+## before marketing campaign
+before<-round(rnorm(50,mean=40,sd=15), digits=0)
+## after marketing campaign
+after<- round(before+5+runif(50,min=-1,max=1)*10, digits=0)
+# same supermarkets -> more or less same clients, sales are dependent
+plot(before)
+hist(before)
+qqnorm(before)
+qqline(before)
+shapiro.test(before)
+plot(after)
+hist(after)
+qqnorm(after)
+qqline(after)
+shapiro.test(after)
+boxplot(before,after)
+boxplot(before-after)
+cor(before,after)
+t.test(before,after)
+t.test(before,after,paired=TRUE)
+
+wilcox.test(before-after)
+
+####################################
+## game example
+game<-c(84,14,583,50,0,57,207,43,178,0,2,57)
+### !!!!!!! few observations!!!!!!!!! no CLT!!!!!!!!!!!!
+hist(game,freq=FALSE)
+lines(density(game,adjust=2))
+boxplot(game)
+qqnorm(game)
+qqline(game)
+#### !!!!!!!! not normal at all !!!!!!!!!!!!!
+t.test(game)
+wilcox.test(game)
+## robust test necessary
+bootstrap<-function(x,size=10000){
+  n<-length(x)
+  meds<-numeric(size)
+  for(i in 1:size){
+    draw<-sample(x,size=n,replace=TRUE)
+    med<-median(draw)
+    meds[i]<-med
+  }
+  
+  meds
+}
+meds<-bootstrap(game,size=100000)
+ecd<-ecdf(meds)
+1-ecd(median(game)) # p value corresponding to the observed median
+lines(x=c(median(game),median(game)),y=c(0,ecd(median(game))),col=2)
+lines(x=c(-50,median(game)),y=c(ecd(median(game)),ecd(median(game))),col=2)
+(bs.conf.int<-quantile(meds,probs=c(0.025,0.975)))
+lines(x=c(bs.conf.int[1],bs.conf.int[1]),y=c(0,0.025),col=3)
+lines(x=c(-50,bs.conf.int[1]),y=c(0.025,0.025),col=3)
+lines(x=c(bs.conf.int[2],bs.conf.int[2]),y=c(0,0.975),col=3)
+lines(x=c(-50,bs.conf.int[2]),y=c(0.975,0.975),col=3)
+hist(meds,freq=F,ylim=c(0,0.029),breaks=seq(0,max(meds),length.out=18))
+lines(den<-density(meds,adjust=10),col=1)
+abline(v=median(meds),col=2)
+abline(v=bs.conf.int[1],col=3)
+abline(v=bs.conf.int[2],col=3)
+
+## 2 sample t test 
+# comparing 2 independent samples
+set.seed(587943)
+first.sample<-rnorm(100,mean=45,sd=50)
+second.sample<-rnorm(100,mean=40,sd=25)
+hist(first.sample)
+qqnorm(first.sample)
+qqline(first.sample)
+hist(second.sample)
+qqnorm(second.sample)
+qqline(second.sample)
+boxplot(first.sample,second.sample)
+cor(first.sample,second.sample)
+var.test(first.sample,second.sample)
+t.test(first.sample,second.sample,var.equal=FALSE)
+
+## chi squared test
+
+## install for some Bayesian versions of tests
+install.packages("devtools")
+library(devtools)
+install_github("rasmusab/bayesian_first_aid")
+library(BayesianFirstAid)

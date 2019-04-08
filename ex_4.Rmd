@@ -1,0 +1,17 @@
+---
+title: "Hausübung 4"
+output: html_notebook
+---
+
+# Aufgabe 1
+
+```{r}
+library(tidyverse)
+library(knitr)
+library(car)
+```
+
+```{r}
+car::
+```
+

@@ -1,0 +1,218 @@
+############################
+### Einführung in Statistik  (R Code)
+### (c) Alexandra Posekany
+############################
+###############################
+## ANOVA
+
+## data generation
+Y <- rnorm(100,mean=c(20, 50, 40, 72),sd=2) 
+X1<-as.factor(rep(c(1,2),50))
+X2<-as.factor(rep(c(1,1,2,2),25))
+
+## model fitting
+fm1 <- lm(Y ~ 1)
+summary(fm1)
+fmA <- lm(Y ~ X1)
+summary(fmA)
+fmB <- lm(Y ~ X2)
+summary(fmB)
+fmAB <- lm(Y ~ X1 + X2)
+summary(fmAB)
+fmAxB <- lm(Y ~ X1 * X2)
+summary(fmAxB)
+
+## model selection
+anova(fmAxB,fmAB)
+anova(fmAB,fmA)
+anova(fmAB,fmB)
+
+############################
+### Linear Regression
+############################
+###############################
+## Linear Regression
+set.seed(12345)
+x<-rnorm(150,mean=2000,sd=300)
+y<-100+0.25*x+rnorm(150,mean=0,sd=100)
+cor(x,y)
+cor.test(x,y,conf.level=0.99)
+boxplot(x)
+qqnorm(x)
+qqline(x)
+boxplot(y)
+qqnorm(y)
+qqline(y)
+# fit linear model 
+lm1<-lm(y~x)
+summary(lm1)
+plot(lm1)
+# model prediction
+predict(lm(y ~ x))
+new <- data.frame(x = seq(min(x), max(x), length=150))
+predict(lm1, new, se.fit = TRUE)
+pred.w.plim <- predict(lm1, new, interval = "prediction")
+pred.w.clim <- predict(lm1, new, interval = "confidence")
+
+plot(x,y,main="Fit with prediction and confidence intervals")
+abline(lm1,col=2,lwd=3)
+lines(new$x,pred.w.clim[,2],col=3,lwd=3,lty=2)
+lines(new$x,pred.w.clim[,3],col=3,lwd=3,lty=2)
+lines(new$x,pred.w.plim[,2],col=4,lwd=3,lty=3)
+lines(new$x,pred.w.plim[,3],col=4,lwd=3,lty=3)
+
+
+## data 
+library(car)
+data(Anscombe)
+summary(Anscombe)
+boxplot(Anscombe$education)
+Anscombe[which(Anscombe$education==max(Anscombe$education)),]
+qqnorm(Anscombe$education)
+qqline(Anscombe$education)
+shapiro.test(Anscombe$education)
+anscom<-Anscombe[-which(Anscombe$education==max(Anscombe$education)),]
+## probable outlier at AK -> better remove data point
+boxplot(Anscombe$income)
+qqnorm(Anscombe$income)
+qqline(Anscombe$income)
+shapiro.test(Anscombe$income)
+## perfectly normal
+boxplot(Anscombe$urban)
+qqnorm(Anscombe$urban)
+qqline(Anscombe$urban)
+shapiro.test(Anscombe$urban)
+## perfectly normal
+boxplot(Anscombe$young)
+reorder<-order(Anscombe$young)
+(Anscombe[reorder,])[(dim(Anscombe)[1]-2):dim(Anscombe)[1],]
+## potential leverage points!! 
+qqnorm(Anscombe$young)
+qqline(Anscombe$young)
+shapiro.test(Anscombe$young)
+# definite outliers!
+## to see the effect of leverage points, we remove outliers
+anscom.no.outliers<-Anscombe[reorder[1:(dim(Anscombe)[1]-2)],]
+shapiro.test(anscom$young)
+# all data are quite normal now
+## dependencies
+cor(anscom)
+pairs(anscom)
+## clear correlation between 'target' variable income and correlation, urban
+## weak correlation with other explanatory variables
+## !!! watch out, taking another variable as target would be compromised 
+## because of high correlation between income, urban and income, education
+
+lm.full<-lm(income~education+urban+young, data=anscom)
+summary(lm.full)
+par(mfrow=c(2,2))
+plot(lm.full)
+(rbind(anscom[rownames(anscom)=="VT",],anscom[rownames(anscom)=="UT",])) # 'good' leverage point
+lm.edu.urb<-lm(income~education+urban,data=anscom)
+par(mfrow=c(2,2))
+plot(lm.edu.urb)
+summary(lm.edu.urb)
+anova(lm.full,lm.edu.urb)
+
+## dependencies
+cor(anscom.no.outliers)
+pairs(anscom.no.outliers)
+## clear correlation between 'target' variable income and correlation, urban
+## weak correlation with other explanatory variables
+## !!! watch out, taking another variable as target would be compromised 
+## because of high correlation between income, urban and income, education
+
+lm.full.no.outliers<-lm(income~education+urban+young, data=anscom.no.outliers)
+summary(lm.full.no.outliers)
+par(mfrow=c(2,2))
+plot(lm.full.no.outliers)
+(rbind(anscom.no.outliers[rownames(anscom.no.outliers)=="VT",],anscom.no.outliers[rownames(anscom.no.outliers)=="UT",])) # 'good' leverage point
+lm.edu.urb.no.outliers<-lm(income~education+urban,data=anscom.no.outliers)
+par(mfrow=c(2,2))
+plot(lm.edu.urb.no.outliers)
+summary(lm.edu.urb.no.outliers)
+anova(lm.full.no.outliers,lm.edu.urb.no.outliers)
+## young is required and significantly improves the model
+
+# model prediction
+predict(object=lm.full)
+new <- data.frame(education = seq(min(anscom$education), max(anscom$education), length=150),
+                  urban = seq(min(anscom$urban), max(anscom$urban), length=150),
+                  young = seq(min(anscom$young), max(anscom$young), length=150))
+predict(lm.full, new, se.fit = TRUE)
+pred.w.plim <- predict(lm.full, new, interval = "prediction")
+pred.w.clim <- predict(lm.full, new, interval = "confidence")
+
+
+######################################
+## regression with categorical variables
+#####################################
+library(MASS)
+library(lattice)
+data(cats, package="MASS")
+attach(cats)
+summary(cats)
+pairs(cats)
+boxplot(Hwt)
+cats[which(Hwt==max(Hwt)),]
+## potential leverage point in regression
+par(mfrow=c(1,1))
+plot(Hwt~Bwt,data=cats,col=Sex)
+title(main="Heart Weight (g) vs. Body Weight (kg)\nof Domestic Cats")
+with(cats, cor(Bwt, Hwt)) 
+with(cats, cor.test(Bwt, Hwt,conf.level=0.99))
+## only correlation between numeric variables is reasonable!
+lm1 = lm(Hwt~Bwt+Sex, data=cats)
+summary(lm1)
+par(mfrow=c(2,2))
+plot(lm1)
+lm.interaction<-lm(Hwt~Bwt*Sex, data=cats)
+summary(lm.interaction)
+lm.simple = lm(Hwt~Bwt, data=cats)
+summary(lm.simple)
+par(mfrow=c(2,2))
+plot(lm.simple)
+anova(lm.simple,lm1,lm.interaction)
+## difference between bottom-up and top-down strategy for model selection
+lm.simple.male = lm(Hwt~Bwt, data=cats[cats$Sex=="M",])
+lm.simple.female = lm(Hwt~Bwt, data=cats[cats$Sex=="F",])
+summary(lm.simple.female)
+summary(lm.simple.male)
+par(mfrow=c(1,1))
+plot(Hwt~Bwt,data=cats,col=Sex)
+title(main="Heart Weight (g) vs. Body Weight (kg)\nof Domestic Cats")
+abline(lm.simple.male,col=1)
+abline(lm.simple.female,col=2)
+print(xyplot(Hwt~Bwt|Sex, data=cats, type=c("p", "r")))
+# remove the leverage point
+cats.nl<-cats[-which(Hwt==max(Hwt)),]
+lm.simple.male.no.lev = lm(Hwt~Bwt, data=cats.nl[cats.nl$Sex=="M",])
+summary(lm.simple.male.no.lev)
+par(mfrow=c(1,1))
+plot(Hwt~Bwt,data=cats,col=Sex)
+title(main="Heart Weight (g) vs. Body Weight (kg)\nof Domestic Cats")
+abline(lm.simple.male,col=1)
+abline(lm.simple.female,col=2)
+abline(lm.simple.male.no.lev,col=4)
+
+##################################
+## Insurance data 
+## explain dummy coding of ANOVA/linear models 
+
+insurance <- read.csv("~/work/courses/FH Statistik für Bioinformatiker/WS 2016/exercises/insurance.csv")
+summary(insurance)
+deg<-insurance$deg_nd+2*insurance$deg_ged+3*insurance$deg_hs+4*insurance$deg_ba+5*insurance$deg_ma+6*insurance$deg_phd+7*insurance$deg_oth
+degrees<-factor(deg,labels=c("nd","ged","hs","ba","ma","phd","oth"))
+summary(degrees)
+reg<-1*insurance$reg_ne+2*insurance$reg_mw+3*insurance$reg_so+4*insurance$reg_we
+region<-factor(reg,labels=c("ne","mw","so","we"))
+summary(region)
+rac<-insurance$race_bl+2*insurance$race_ot+3*insurance$race_wht
+race<-factor(rac,labels=c("black","other","white"))
+summary(race)
+
+
+insur<-data.frame(degrees,region,race,as.factor(insurance$healthy))
+names(insur)<-c("Degrees","Region","Race","Healthy")
+summary(insur)
+

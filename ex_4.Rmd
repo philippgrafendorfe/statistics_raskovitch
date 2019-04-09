@@ -3,15 +3,77 @@ title: "Hausübung 4"
 output: html_notebook
 ---
 
-# Aufgabe 1
-
 ```{r}
 library(tidyverse)
 library(knitr)
 library(car)
+library(utils)
+```
+
+
+# Aufgabe 2
+F- Statistik Interpretation. 
+
+```{r}
+plot(swiss$Fertility, swiss$Education)
+abline(lm(swiss$Education ~ swiss$Fertility))
+```
+
+
+```{r}
+lmswiss<-lm(Education~Fertility, data = swiss)
+summary(lmswiss)
+```
+
+Da die beiden Quantile Q1 und Q3 annähernd symmetrisch sind. Dies wäre ein erster Hinweis auf Normalverteilung der Residuen (=Schätzer für den Fehler).
+Der Interzept Wert 0.4682 extrapoliert die Situation bei 0 Fertilität. Damit erreich man die höchste Bildung. Dies wird aber absolut vom Standort Genf dominiert. Ein Grund hierfür könnte sein, dass in Genf besonders viele Ausländer von der Uno leben und diese dort keine Kinder haben und dennoch sehr hoch gebildet sind.
+Das Modell beschreibt, dass die Bildung im Mittel mit zunehmender Fertiltitä sinkt. Die Steigung der Gerade ist negativ.
+
+Der Standard Error für das Interzept ist aufgrund der Extrpolation groß und der Fehler bei der Steigung ist gering.
+Ein t Wert, der im Vergleich zum Standard Error sehr weit von 0 entfertn ist, spricht für einen linearen Zusammenhang. Der Interzept wird wiederum stark von Genf beeinflusst.
+
+Die p- Werte geben die Signifikanz der ermittelten Werte aus. Wir können aufgrund der drei Sterne mit nahezu jeder beliebigen Signifikanz H0 verwerfen mit H0: Es gibt keinen linearen Zusammenhang zwischen Education und Fertilität.
+
+Im Mittel kann die tatsächliche Bildung um 7.271 von der regression line abweichen.
+
+Da die F- Statistik vergleichsweise größer als 1 ist, liegt hier ein weitere Indikator vor H0 zu verwerfen.
+
+
+```{r}
+plot(lmswiss)
+```
+
+Der erste Plot "Residuals vs fitted" zeigt, dass es hier offensichtlich nicht- lineare Muster in den Residuen gibt. Für einen guten linearen Zusammenhang sollte die rote Linie annähernd eine Gerade sein.
+
+Der Normal QQ Plot zeigt auf, dass es Ausreisser gibt welche verhindern, dass die Residuen durchgehend normal verteilt sind. Man sollte sich diese genauer ansehen und herausfinden ob es sich um Messfehler handelt.
+
+Der Scale Location oder Spread Location plot bietet die Möglichkeit Homo- oder Heteroskedastizität visuell zu überprüfen. Abgeshen von Ausreissern kann man diesem Datensatz durchaus die Homoskedastizität attestieren.
+
+Der Residuals vs. Leverage Plot hilft Ausreisser zu finden, welche das lineare Modell tatsächlich stark beeinflussen. V. De Geneve bleibt auch hier der extremste Wert und sollte näher angeschaut werden. Als Faustregel gilt, dass Beobachtungen im rechten oben und unteren Bereich die Regression stark beeinflussen können.
+Diese werden Werte liegen ausserhalb des Trendes der Mehrheit der Fälle.
+
+Ich würde hier einfach die Regression erneut ohne diese Geneve Beobachtung durchführen.
+
+
+Als Test hier noch ein Versuch ohne die Genve Beobachtung.
+```{r}
+df <- swiss[-45,]
 ```
 
 ```{r}
-car::
+new_mod <- lm(Education~Fertility, data = df)
+summary(new_mod)
 ```
+
+```{r}
+plot(new_mod)
+```
+
+Aufgrund der oben genannten Tatsachen würde ich mich nicht gegen H0 entscheiden.
+
+
+
+
+
+
 

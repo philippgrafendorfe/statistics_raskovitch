@@ -7,6 +7,7 @@ output: html_notebook
 library(knitr)
 library(tidyverse)
 library(titanic)
+library(reshape2)
 ```
 
 Man könnte hier zuerst die Wahrscheinlichkeit eines Mannes zu überleben berechnen; danach berechnen wir ob es einen siginifkanten Unterschied des relativen Anteils der Männer im Vergleich zu dem der Frauen gibt. Anschließen schauen wir uns die Kinder an. 
@@ -18,7 +19,7 @@ df <- titanic::titanic_train %>% select(Survived, Sex, Age)
 Haben Frauen eine signifikant höhere Überlebenschance als Männer?
 
 ```{r}
-prop.table(table(df_filtered$Survived, df_filtered$Sex))
+prop.table(table(df$Survived, df_filtered$Sex))
 ```
 
 Es sieht so aus als ob mindestens doppelt so viele Frauen überlebt haben wie Männer. 
@@ -43,7 +44,20 @@ df %>% filter(Sex == 'female' & Survived == '1') %>% summarise(n=n()) %>% as.num
 prop.test(x = c(nb_female_survived, nb_male_survived), n=c(nb_female, nb_male), alternative = 'greater')
 ```
 
+```{r}
+ftable(Titanic)
+```
+Aus diesem Table würde ich dann die nötigen Werte für den Proportionstest rausnehmen.
+
+
 Für Kinder geht das analog. Man muss sich nur überlegen was es heißt ein Kind zu sein. Spricht bei welchem Alter man tn threshold einzieht.
+
+## Mosaic Plot
+
+```{r}
+mosaic(Titanic)
+```
+
 
 # Genontologieanalyse
 
@@ -70,11 +84,15 @@ z = qnorm(1-alpha/2)
 (conf_lower <- p_hat - z*sqrt(p_hat*(1-p_hat)/n))
 ```
 
+NB: Vielleicht finde ich hier noch eine einfachere Möglichkeit, das zu berechnen. Es kann leicht sein, dass das CI als Nebenergebnis bei einem anderen Test abfällt.
+
+
 für das 99% Intervall muss man nur den alpha Wert anpassen.
 
 ```{r}
-prop.test(x = nb_krebs, n=n, p=0.55, alternative = 'two.sided')
+prop.test(x = nb_krebs, n = n, p = 0.55, alternative = 'two.sided')
 ```
+
 
 Die Änderung ist signifkant auf dem 5% Niveau, jedoch nicht auf dem 1% Niveau. da in der Medizint jedoch meist ein 1% Niveau gefordert wird, könne wir hier H0 (p=0.55) nicht ablehne.
 

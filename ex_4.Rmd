@@ -1,6 +1,8 @@
 ---
-title: "Hausübung 4"
-output: html_notebook
+title: "HausÃ¼bung 4"
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r}
@@ -41,9 +43,10 @@ Da die F- Statistik vergleichsweise größer als 1 ist, liegt hier ein weitere I
 
 ```{r}
 plot(lmswiss)
+t <- 3
 ```
 
-Der erste Plot "Residuals vs fitted" zeigt, dass es hier offensichtlich nicht- lineare Muster in den Residuen gibt. Für einen guten linearen Zusammenhang sollte die rote Linie annähernd eine Gerade sein.
+Der erste Plot "Residuals vs fitted" zeigt, dass es `r t` hier offensichtlich nicht- lineare Muster in den Residuen gibt. Für einen guten linearen Zusammenhang sollte die rote Linie annähernd eine Gerade sein.
 
 Der Normal QQ Plot zeigt auf, dass es Ausreisser gibt welche verhindern, dass die Residuen durchgehend normal verteilt sind. Man sollte sich diese genauer ansehen und herausfinden ob es sich um Messfehler handelt.
 
